@@ -10,6 +10,7 @@ enum ActionType {
 class ScreenAddNote extends StatelessWidget {
   final ActionType type;
   String? id;
+
   ScreenAddNote({
     required this.type,
     this.id,
@@ -38,10 +39,11 @@ class ScreenAddNote extends StatelessWidget {
 
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
           type.name.toUpperCase(),
@@ -89,6 +91,13 @@ class ScreenAddNote extends StatelessWidget {
       content: content,
     );
 
-    NoteDB().createNote(_newNote);
+    final newNote = await NoteDB().createNote(_newNote);
+
+    if (newNote != null) {
+      print("Note Saved");
+      Navigator.of(_scaffoldKey.currentContext!).pop();
+    } else {
+      print("Error While Saving Note");
+    }
   }
 }

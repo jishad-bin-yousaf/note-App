@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:note_app/data/get_all_note_resp/get_all_note_resp.dart';
 import 'package:note_app/data/note_app_model/note_app_model.dart';
@@ -14,19 +17,33 @@ class NoteDB extends ApiCalls {
   final dio = Dio();
   final url = Url();
 
+  NoteDB() {
+    dio.options = BaseOptions(
+      baseUrl: url.baseUrl,
+      responseType: ResponseType.plain,
+    );
+  }
+
   @override
   Future<NoteAppModel?> createNote(NoteAppModel value) async {
     try {
-      //  print("++++++++++++++++++");
+      final _result = await dio.post(
+        url.createNote,
+        data: value.toJson(),
+      );
+      print(_result.data);
 
-      final _result = await dio.post<NoteAppModel>(url.baseUrl + url.createNote, data: value.toJson());
-      print(_result.statusCode);
-
-      return _result.data;
+      final _resultAsJson = jsonDecode(_result.data);
+      return NoteAppModel.fromJson(_resultAsJson as Map<String, dynamic>);
     } on DioError catch (e) {
-      // print(e.response?.data);
+      print(e.response?.data);
+      print(e.toString());
+
+      return null;
     } catch (e) {
       print(e.toString());
+
+      return null;
     }
   }
 
@@ -37,11 +54,13 @@ class NoteDB extends ApiCalls {
 
   @override
   Future<List<NoteAppModel>> getAllNotes() async {
-    final _result = await dio.get<GetAllNoteResp>(url.baseUrl + url.getAllNotes);
-    if (_result.data == null) {
-      return [];
+    final result = await dio.get(url.getAllNotes);
+    if (result.data != null) {
+      final resultAsJson = jsonDecode(result.data);
+      final getNoteResp = GetAllNoteResp.fromJson(resultAsJson);
+      return getNoteResp.data;
     } else {
-      return _result.data!.data;
+      return [];
     }
   }
 
